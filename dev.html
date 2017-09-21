@@ -1,0 +1,297 @@
+<HTML>
+<BODY>
+%%[
+var @END ,@Check
+SET @Last_arrival_date = [Last Reservation Arrival Date]
+SET @Last_Request_Arrival_Date = [Last Request Arrival]
+SET @Email = [Email Address]
+IF @Last_arrival_date < now() THEN
+	SET @Check = Concat(@Check,'1.Y')
+		IF @Last_Request_Arrival_Date > @Last_arrival_date THEN
+			SET @Check = Concat(@Check,'==>','2.1.Y')
+				IF @Last_Request_Arrival_Date > now() THEN
+					SET @Check = Concat(@Check,'==>','2.2.Y')
+					Set @CheckRequests = LookupOrderedRows("Guest_Request_History_WithScore",0,"TotalPropertyScore Desc","Client_Email_Address",@Email,"Villa_was_Booked",0,"Request_Date_Arrival",@Last_Request_Arrival_Date)
+					SET @countAllRequests = RowCount(@CheckRequests)
+						
+					IF  @countAllRequests > 1 THEN
+						SET @Check = Concat(@Check,'==>','2.3.Y')
+						SET @countCheckRequests = IIF(@countAllRequests > 5, 5, @countAllRequests)
+						
+						]%%
+						countCheckRequests: %%=v(@countCheckRequests)=%%<br/>
+						%%[
+						    
+						for @i = 1 to @countCheckRequests do
+							SET @CR_ROW = Row(@CheckRequests,@i)
+							SET @CR_VILLA_ID = Field(@CR_ROW,'VILLA_ID')
+							
+							SET @GetVillas = LookupOrderedRows("Villa Website Algorithm Score",0,"TotalPropertyScore Desc","Villa ID",@CR_VILLA_ID)
+						
+								for @j = 1 to RowCount(@GetVillas)  Do 
+							   
+									SET @GV_ROW = ROW(@GetVillas,@j)
+									SET @GV_Villa_ID = Field(@GV_ROW,'Villa ID')
+									SET @GV_TotalPropertyScore = Field(@GV_ROW,'TotalPropertyScore')
+									SET @GV_Region_2 = Lookup("Active Villa Database", "Region 2", "Villa ID", @GV_Villa_ID)
+									SET @GV_Region_3 = Lookup("Active Villa Database", "Region 3", "Villa ID", @GV_Villa_ID) 
+									SET @GV_Region_4 = Lookup("Active Villa Database", "Region 4", "Villa ID", @GV_Villa_ID) 
+									SET @GV_Bedroom_Number = Lookup("Active Villa Database", "Bedroom Number", "Villa ID", @GV_Villa_ID)
+									SET @GV_Lowest_Price = Lookup("Active Villa Database", "Lowest Price", "Villa ID", @GV_Villa_ID)
+									SET @GV_Beachfront = Lookup("Active Villa Database", "Beachfront", "Villa ID", @GV_Villa_ID)
+									SET @GV_Property_Name = Lookup("Active Villa Database", "Property Name", "Villa ID", @GV_Villa_ID)
+									]%%
+									<div style="Border: 1px solid #000;">
+								CR_TotalPropertyScore: %%=v(@GV_TotalPropertyScore)=%% <br/>
+								CR_VILLA_ID:%%=v(@CR_VILLA_ID)=%%<br/>
+								GV_Villa_ID:%%=v(@GV_Villa_ID)=%%<br/>
+								GV_Region_2:%%=v(@GV_Region_2)=%%<br/>
+								GV_Region_3:%%=v(@GV_Region_3)=%%<br/>
+								GV_Region_4:%%=v(@GV_Region_4)=%%<br/>
+								GV_Bedroom_Number:%%=v(@GV_Bedroom_Number)=%%<br/>
+								GV_Lowest_Price:%%=v(@GV_Lowest_Price)=%%<br/>
+								GV_Beachfront:%%=v(@GV_Beachfront)=%%<br/>
+								GV_Property_Name:%%=v(@GV_Property_Name)=%%<br/>
+									</div>
+									%%[
+						
+						Next @j
+						Next @i
+							IF @countAllRequests == 5 THEN
+							SET @END = "True"
+							ELSEIF @countAllRequests < 5 THEN	
+									SET @countCheckRequests = Subtract(5,@countAllRequests)
+									
+								SET @GetVillas = LookupOrderedRows("Villa Website Algorithm Score",0,"TotalPropertyScore Desc","Region2", @GV_Region_2)
+									SET @Check = Concat(@Check,'==>','2.5.Y')
+									SET @countCheckRequests = IIF(RowCount(@GetVillas) > @countCheckRequests, @countCheckRequests, RowCount(@GetVillas))
+										
+												for @a = 1 to @countCheckRequests Do 
+									   
+											SET @GV_ROW = ROW(@GetVillas,@a)
+											SET @GV_Villa_ID = Field(@GV_ROW,'Villa ID')
+											SET @GV_TotalPropertyScore = Field(@GV_ROW,'TotalPropertyScore')
+											
+											SET @GV_Region_2 = Lookup("Active Villa Database", "Region 2", "Villa ID", @GV_Villa_ID)
+											SET @GV_Region_3 = Lookup("Active Villa Database", "Region 3", "Villa ID", @GV_Villa_ID) 
+											SET @GV_Region_4 = Lookup("Active Villa Database", "Region 4", "Villa ID", @GV_Villa_ID) 
+											SET @GV_Bedroom_Number = Lookup("Active Villa Database", "Bedroom Number", "Villa ID", @GV_Villa_ID)
+											SET @GV_Lowest_Price = Lookup("Active Villa Database", "Lowest Price", "Villa ID", @GV_Villa_ID)
+											SET @GV_Beachfront = Lookup("Active Villa Database", "Beachfront", "Villa ID", @GV_Villa_ID)
+											SET @GV_Property_Name = Lookup("Active Villa Database", "Property Name", "Villa ID", @GV_Villa_ID)
+											]%%
+											<div style="Border: 1px solid #000;">
+										CR_TotalPropertyScore: %%=v(@GV_TotalPropertyScore)=%% <br/>
+										CR_VILLA_ID:%%=v(@CR_VILLA_ID)=%%<br/>
+										GV_Villa_ID:%%=v(@GV_Villa_ID)=%%<br/>
+										GV_Region_2:%%=v(@GV_Region_2)=%%<br/>
+										GV_Region_3:%%=v(@GV_Region_3)=%%<br/>
+										GV_Region_4:%%=v(@GV_Region_4)=%%<br/>
+										GV_Bedroom_Number:%%=v(@GV_Bedroom_Number)=%%<br/>
+										GV_Lowest_Price:%%=v(@GV_Lowest_Price)=%%<br/>
+										GV_Beachfront:%%=v(@GV_Beachfront)=%%<br/>
+										GV_Property_Name:%%=v(@GV_Property_Name)=%%<br/>
+											</div>
+											%%[
+												Next @a
+									
+									
+							ENDIF
+					ELSEIF @countAllRequests == 1 THEN
+						SET @CR_ROW1 = Row(@CheckRequests,1)
+						SET @CR_VILLA_ID1 = Field(@CR_ROW1,'VILLA_ID')
+						SET @Check = Concat(@Check,'==>','2.3.N')
+						
+						SET @GetVillas = LookupOrderedRows("Active Villa Database",0,"Villa ID Desc","Villa ID",@CR_VILLA_ID1)
+								
+									SET @GV_ROW = ROW(@GetVillas,1)
+									SET @GV_Villa_ID = Field(@GV_ROW,'Villa ID')
+									SET @GV_Region_2 = Field(@GV_ROW,'Region 2')
+									SET @GV_Region_3 = Field(@GV_ROW,'Region 3')
+									SET @GV_Region_4 = Field(@GV_ROW,'Region 4')
+									SET @GV_Bedroom_Number = Field(@GV_ROW,'Bedroom Number')
+									SET @GV_Lowest_Price = Field(@GV_ROW,'Lowest Price')
+									SET @GV_Beachfront = Field(@GV_ROW,'Beachfront')
+									SET @GV_Property_Name = FIELD(@GV_ROW,'Property Name')
+									]%%
+									<div style="Border: 1px solid #000;">
+								
+								GV_Villa_ID:%%=v(@GV_Villa_ID)=%%<br/>
+								GV_Region_2:%%=v(@GV_Region_2)=%%<br/>
+								GV_Region_3:%%=v(@GV_Region_3)=%%<br/>
+								GV_Region_4:%%=v(@GV_Region_4)=%%<br/>I 
+								GV_Bedroom_Number:%%=v(@GV_Bedroom_Number)=%%<br/>
+								GV_Lowest_Price:%%=v(@GV_Lowest_Price)=%%<br/>
+								GV_Beachfront:%%=v(@GV_Beachfront)=%%<br/>
+								GV_Property_Name:%%=v(@GV_Property_Name)=%%<br/>
+									</div>
+									%%[
+						
+					ELSE
+						SET @CHECK = Concat(@Check,'==>',' 2.3.Y + NO villas requested')	
+					ENDIF
+
+				ELSE
+					SET @Check = Concat(@Check,'==>','2.2.N')
+					SET @goto = "a"
+				ENDIF
+		ELSE 
+		
+		   SET @Check = Concat(@Check,'==>','2.1.N')
+		   SET @goto = "a"
+			  
+		ENDIF
+
+
+		 IF @END != "True" & @goto == "a" THEN 
+							SET @GetRequests = LookupOrderedRows("Guest_Request_History_WithScore",0,"TotalPropertyScore Desc","Client_Email_Address",@Email)
+							SET @countRequests = RowCount(@GetRequests)	
+							
+							IF @countRequests > 0 THEN
+							SET @Foundvillas = "False"
+								for @r = 1 to @countRequests do
+								IF @Foundvillas == "False" THEN
+									SET @R_ROW = Row(@GetRequests,@r)
+									SET @R_ID = Field(@R_ROW,'Request_ID')
+									IF not empty (@R_ID) Then
+									  SET @Getsurvey = LookupRows("Guest_Survey_Data_Final","Request_ID",@R_ID)	
+									  
+										  IF RowCount(@Getsurvey) > 0 Then
+											SET @Check = Concat(@Check,'==>','31.Y')
+											
+											for @s = 1 to RowCount(@Getsurvey) do
+												SET @S_ROW = Row(@Getsurvey,@s)
+												SET @S_Villa_Return = Field(@S_ROW, 'Guest_Survey_Villa_Return')
+												SET @S_Villa_ID = Field(@S_ROW, 'Villa_ID')
+										IF @Foundvillas == "False" THEN
+											IF @S_Villa_Return == "1"  THEN
+												SET @Check	= Concat(@Check,'==>','42.Y')
+												   SET @Foundvillas = "True"
+													SET @S_Region_2 = Lookup("Active Villa Database", "Region 2", "Villa ID", @S_Villa_ID)
+													SET @S_Region_3 = Lookup("Active Villa Database", "Region 3", "Villa ID", @S_Villa_ID) 
+													SET @S_Region_4 = Lookup("Active Villa Database", "Region 4", "Villa ID", @S_Villa_ID) 
+													SET @S_Bedroom_Number = Lookup("Active Villa Database", "Bedroom Number", "Villa ID", @S_Villa_ID)
+													SET @S_Lowest_Price = Lookup("Active Villa Database", "Lowest Price", "Villa ID", @S_Villa_ID)
+													SET @S_Beachfront = Lookup("Active Villa Database", "Beachfront", "Villa ID", @S_Villa_ID)
+													SET @S_Property_Name = Lookup("Active Villa Database", "Property Name", "Villa ID", @S_Villa_ID)
+													]%%
+													<div style="Border: 1px solid #000;">
+														S_Villa_ID:%%=v(@S_Villa_ID)=%%<br/>
+														S_Region_2:%%=v(@S_Region_2)=%%<br/>
+														S_Region_3:%%=v(@S_Region_3)=%%<br/>
+														S_Region_4:%%=v(@S_Region_4)=%%<br/>
+														S_Bedroom_Number:%%=v(@S_Bedroom_Number)=%%<br/>
+														S_Lowest_Price:%%=v(@S_Lowest_Price)=%%<br/>
+														S_Beachfront:%%=v(@S_Beachfront)=%%<br/>
+														S_Property_Name:%%=v(@S_Property_Name)=%%<br/>
+													</div>
+													%%[
+											SET @S_GetVillas = LookupOrderedRows("Active_Villa_Database_with_Score",0,"Lowest Price ASC,TotalPropertyScore DESC","Region 3", @S_Region_3)
+											SET @countvilla = 0
+											SET @endvilla = "False"
+											SET @firstlimit = 100
+											SET @secondlimit = 500
+												IF RowCount(@S_GetVillas) > 0 THEN
+													
+														for @SR = 1 to RowCount(@S_GetVillas) Do 
+															SET @SR_ROW = ROW(@S_GetVillas,@SR)
+															SET @SR_Lowest_Price = Field(@SR_ROW,'Lowest Price')
+															SET @SR_TotalPropertyScore = Field(@SR_ROW,'TotalPropertyScore')
+															SET @SR_Villa_ID = Field(@SR_ROW,'Villa ID')
+															SET @SR_Region_2 = Field(@SR_ROW,'Region 2')
+															SET @SR_Region_3 = Field(@SR_ROW,'Region 3')
+															SET @SR_Region_4 = Field(@SR_ROW,'Region 4')
+															SET @SR_Bedroom_Number = Field(@SR_ROW,'Bedroom Number')
+															
+															SET @SR_Beachfront = Field(@SR_ROW,'Beachfront')
+															SET @SR_Property_Name = Field(@SR_ROW,'Property Name')
+															IF @SR_Villa_ID != @S_Villa_ID THEN
+																SET @endvilla = "True"
+																IF (@SR_Lowest_Price < ADD(@S_Lowest_Price,@firstlimit) AND @SR_Lowest_Price > Subtract(@S_Lowest_Price,@firstlimit)) and @SR_Bedroom_Number == @S_Bedroom_Number AND @SR_Beachfront == @S_Beachfront THEN
+																	SET @countVilla = Add(@countvilla,1)
+																	IF @countVilla <= 5 THEN 
+																		SET @endvilla = "False"
+																		SET @Check	= Concat(@Check,'==>','44')
+																		
+																		
+																		]%%
+																		<div style="Border: 1px solid #000;">
+																			SR_TotalPropertyScore:%%=v(@SR_TotalPropertyScore)=%%<br/>
+																			SR_Villa_ID:%%=v(@SR_Villa_ID)=%%<br/>
+																			SR_Region_2:%%=v(@SR_Region_2)=%%<br/>
+																			SR_Region_3:%%=v(@SR_Region_3)=%%<br/>
+																			SR_Region_4:%%=v(@SR_Region_4)=%%<br/>
+																			SR_Bedroom_Number:%%=v(@SR_Bedroom_Number)=%%<br/>
+																			SR_Lowest_Price:%%=v(@SR_Lowest_Price)=%%<br/>
+																			SR_Beachfront:%%=v(@SR_Beachfront)=%%<br/>
+																			SR_Property_Name:%%=v(@SR_Property_Name)=%%<br/>
+																		</div>
+																		%%[
+																	ENDIF
+																ENDIF
+																
+																IF (@SR_Lowest_Price < ADD(@S_Lowest_Price,@secondlimit) AND @SR_Lowest_Price > Subtract(@S_Lowest_Price,@secondlimit)) AND @endvilla == "True" THEN
+																	SET @countVilla = Add(@countvilla,1)
+																	IF @countVilla <= 5 THEN 
+																		
+																		SET @Check	= Concat(@Check,'==>','46')
+																		
+																		]%%
+																		<div style="Border: 1px solid #000;">
+																			SR2_TotalPropertyScore:%%=v(@SR_TotalPropertyScore)=%%<br/>
+																			SR2_Villa_ID:%%=v(@SR_Villa_ID)=%%<br/>
+																			SR2_Region_2:%%=v(@SR_Region_2)=%%<br/>
+																			SR2_Region_3:%%=v(@SR_Region_3)=%%<br/>
+																			SR2_Region_4:%%=v(@SR_Region_4)=%%<br/>
+																			SR2_Bedroom_Number:%%=v(@SR_Bedroom_Number)=%%<br/>
+																			SR2_Lowest_Price:%%=v(@SR_Lowest_Price)=%%<br/>
+																			SR2_Beachfront:%%=v(@SR_Beachfront)=%%<br/>
+																			SR2_Property_Name:%%=v(@SR_Property_Name)=%%<br/>
+																		</div>
+																		%%[
+																	ENDIF
+																ENDIF
+															ENDIF													
+														Next @SR
+												ENDIF
+												
+											ELSE @S_Villa_Return == "0" THEN	
+												SET @Check	= Concat(@Check,'==>','42.N')
+											ENDIF
+										ENDIF	
+											Next @s
+											
+										  ELSE
+											SET @Check = Concat(@Check,'==>','31.N')
+											
+										  ENDIF
+									ENDIF
+								ENDIF		
+								Next @r
+							ENDIF
+		ENDIF 
+
+
+ELSE 
+	SET @Check = Concat(@Check,'==>','1.N')
+ENDIF
+]%%
+
+
+
+Last Reservation Arrival Date: %%=v(@last_arrival_date)=%% <br/>
+Last Request Arrival Date: %%=v(@Last_Request_Arrival_Date)=%% <br/>
+Now :%%=now()=%%
+<br/>
+%%=v(@Check)=%%<br/>
+@S->%%=v(@s)=%%<br/>
+@r=>%%=v(@r)=%%<br/>
+Found villas==> %%=v(@Foundvillas)=%%<br/>
+
+
+
+<table cellpadding="2" cellspacing="0" width="600" ID="Table5" Border=0><tr><td><font face="verdana" size="1" color="#444444">This email was sent by: <b>%%Member_Busname%%</b><br>%%Member_Addr%% %%Member_City%%, %%Member_State%%, %%Member_PostalCode%%, %%Member_Country%%<br><br></font></td></tr></table>
+<a href="%%profile_center_url%%" alias="Update Profile">Update Profile</a>
+<custom name="opencounter" type="tracking">
+</BODY>
+</HTML>
